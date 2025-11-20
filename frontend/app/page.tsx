@@ -4,6 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { BrowserProvider, Contract, ethers } from 'ethers';
 import styles from './page.module.css';
 
+// Extend Window interface to include ethereum
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 interface Tournament {
   id: number;
   entryFee: string;
@@ -73,7 +80,7 @@ export default function Home() {
 
   const checkWalletConnection = async () => {
     try {
-      const browserProvider = new BrowserProvider(window.ethereum);
+      const browserProvider = new BrowserProvider(window.ethereum!);
       const accounts = await browserProvider.listAccounts();
       
       if (accounts && accounts.length > 0) {
@@ -94,6 +101,31 @@ export default function Home() {
         throw new Error('MetaMask not installed');
       }
 
+      // Step 1: Switch to Sepolia network
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0xaa36a7' }], // Sepolia
+        });
+      } catch (switchError: any) {
+        // Network doesn't exist, add it
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0xaa36a7',
+              chainName: 'Sepolia Testnet',
+              rpcUrls: ['https://eth-sepolia.public.blastapi.io'],
+              nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
+              blockExplorerUrls: ['https://sepolia.etherscan.io'],
+            }],
+          });
+        } else {
+          throw switchError;
+        }
+      }
+
+      // Step 2: Request accounts
       const browserProvider = new BrowserProvider(window.ethereum);
       const accounts = await browserProvider.send('eth_requestAccounts', []);
       
@@ -154,7 +186,6 @@ export default function Home() {
     }
   }, [account, provider, activeTab]);
 
-  // ✅ NEW: Join tournament handler
   const handleJoinTournament = async (tournamentId: number, entryFee: string) => {
     if (!signer || !account) {
       setError('Please connect wallet first');
@@ -166,28 +197,21 @@ export default function Home() {
     setTransactionHash(null);
 
     try {
-      // Step 1: Approve USDC
       console.log('Step 1: Approving USDC...');
       const usdcContract = new Contract(SEPOLIA_USDC, USDC_ABI, signer);
-      
-      // Convert to wei (USDC has 6 decimals on Sepolia)
       const amount = ethers.parseUnits(entryFee, 6);
-      
       const approveTx = await usdcContract.approve(RPS_CONTRACT_ADDRESS, amount);
       await approveTx.wait();
       console.log('✅ USDC approved');
 
-      // Step 2: Join tournament
       console.log('Step 2: Joining tournament...');
       const tournamentContract = new Contract(RPS_CONTRACT_ADDRESS, RPS_TOURNAMENT_ABI, signer);
-      
       const joinTx = await tournamentContract.joinTournament(tournamentId);
       const receipt = await joinTx.wait();
       
       setTransactionHash(receipt?.hash);
       console.log('✅ Tournament joined!', receipt?.hash);
       
-      // Reload tournaments
       setTimeout(() => loadTournaments(), 2000);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to join tournament';
@@ -198,7 +222,6 @@ export default function Home() {
     }
   };
 
-  // ✅ NEW: Create tournament handler
   const handleCreateTournament = async () => {
     if (!signer || !account) {
       setError('Please connect wallet first');
@@ -216,8 +239,6 @@ export default function Home() {
 
     try {
       const tournamentContract = new Contract(RPS_CONTRACT_ADDRESS, RPS_TOURNAMENT_ABI, signer);
-      
-      // Convert to wei (USDC has 6 decimals)
       const fee = ethers.parseUnits(entryFeeInput, 6);
       
       console.log('Creating tournament with entry fee:', entryFeeInput, 'USDC');
@@ -228,7 +249,6 @@ export default function Home() {
       setEntryFeeInput('0.1');
       console.log('✅ Tournament created!', receipt?.hash);
       
-      // Switch to tournaments tab
       setTimeout(() => {
         setActiveTab('tournaments');
         loadTournaments();
@@ -242,7 +262,6 @@ export default function Home() {
     }
   };
 
-  // ✅ NEW: Resolve match handler
   const handleResolveMatch = async (matchId: number) => {
     if (!signer) {
       setError('Please connect wallet first');
@@ -255,7 +274,6 @@ export default function Home() {
 
     try {
       const tournamentContract = new Contract(RPS_CONTRACT_ADDRESS, RPS_TOURNAMENT_ABI, signer);
-      
       console.log('Resolving match with FHE...');
       const tx = await tournamentContract.resolveMatch(matchId);
       const receipt = await tx.wait();
