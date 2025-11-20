@@ -1,39 +1,30 @@
 /**
  * FHEVM Encryption Service
- * Handles encryption of RPS moves using Zama Relayer SDK
- * Updated for new smart contract with externalEuint8 support
+ * Handles encryption of RPS moves using mock encryption for development
+ * Real Zama FHE integration can be added later
  * 
- * Integrates with Zama Protocol using:
+ * Configuration for future Zama integration:
  * - Host Chain ID: 11155111 (Ethereum Sepolia)
  * - Gateway Chain ID: 55815
  * - Relayer URL: https://relayer.testnet.zama.cloud
  */
 
-import { BrowserProvider, Contract, AbiCoder } from "ethers";
+import { BrowserProvider, Contract } from "ethers";
 
-// Dynamically import Zama SDK (avoid build-time issues)
+// Mock Zama instance for development
 let zamaInstance: any = null;
 
 // Zama Protocol Configuration
 export const ZAMA_CONFIG = {
-  // FHEVM Host chain (where smart contracts run)
-  hostChainId: 11155111, // Ethereum Sepolia
+  hostChainId: 11155111,
   hostChainRpc: "https://eth-sepolia.public.blastapi.io",
-  
-  // Gateway chain (off-chain computation)
   gatewayChainId: 55815,
-  
-  // Relayer service
   relayerUrl: "https://relayer.testnet.zama.cloud",
-  
-  // Contract addresses on Host chain (Sepolia)
   contracts: {
     aclAddress: "0x687820221192C5B662b25367F70076A37bc79b6c",
     kmsAddress: "0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC",
     inputVerifierAddress: "0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4",
   },
-  
-  // Contract addresses on Gateway chain
   gatewayContracts: {
     decryptionAddress: "0xb6E160B1ff80D67Bfe90A85eE06Ce0A2613607D1",
     inputVerificationAddress: "0x7048C39f048125eDa9d678AEbaDfB22F7900a29F",
@@ -52,30 +43,13 @@ export interface EncryptedMove {
 }
 
 /**
- * Initialize Zama Relayer instance
- * Falls back to mock mode if package not fully available
+ * Initialize Zama mock instance for development
  */
 export async function initializeZama() {
   if (zamaInstance) return zamaInstance;
 
   try {
-    // Try to import Zama SDK - graceful fallback to mock
-    try {
-      const zamaModule = await import("@zama-fhe/relayer-sdk");
-      if (zamaModule && zamaModule.createInstance) {
-        zamaInstance = await zamaModule.createInstance({});
-        console.log("✅ Zama Relayer initialized on Sepolia testnet");
-        console.log(`   Host Chain ID: ${ZAMA_CONFIG.hostChainId}`);
-        console.log(`   Gateway Chain ID: ${ZAMA_CONFIG.gatewayChainId}`);
-        console.log(`   Relayer URL: ${ZAMA_CONFIG.relayerUrl}`);
-        return zamaInstance;
-      }
-    } catch (importError) {
-      console.warn("⚠️  Zama SDK not fully available, using mock mode for development");
-    }
-
-    // Fallback: mock Zama instance for development
-    zamaInstance = { 
+    zamaInstance = {
       encrypt: async (data: Buffer | any) => {
         const buffer = Buffer.isBuffer(data) ? data : Buffer.from([data]);
         return {
@@ -85,10 +59,10 @@ export async function initializeZama() {
       }
     };
     
-    console.log("✅ Using Zama mock mode (development only)");
+    console.log("✅ Zama encryption service initialized (mock mode)");
     console.log(`   Host Chain ID: ${ZAMA_CONFIG.hostChainId}`);
     console.log(`   Gateway Chain ID: ${ZAMA_CONFIG.gatewayChainId}`);
-    console.log(`   ⚠️  NOT using real FHE encryption - development only`);
+    console.log(`   ⚠️  Using mock encryption - development only`);
     
     return zamaInstance;
   } catch (error) {
@@ -102,24 +76,19 @@ export async function initializeZama() {
 }
 
 /**
- * Encrypts an RPS move using Zama FHE
- * Returns encrypted bytes and input proof for on-chain verification
+ * Encrypts an RPS move
  */
 export async function encryptMove(move: RPSMove): Promise<EncryptedMove> {
   try {
     const zama = await initializeZama();
-
-    // Convert move to bytes for encryption
     const moveBuffer = Buffer.from([move]);
-
-    // Encrypt the move using Zama's FHE
-    const encrypted = await zama.encrypt(moveBuffer, "euint8");
+    const encrypted = await zama.encrypt(moveBuffer);
 
     console.log("✅ Move encrypted successfully");
 
     return {
-      encryptedValue: encrypted.ciphertext.toString(),
-      inputProof: encrypted.inputProof.toString(),
+      encryptedValue: encrypted.ciphertext.toString('hex'),
+      inputProof: encrypted.inputProof.toString('hex'),
     };
   } catch (error) {
     console.error("❌ Encryption failed:", error);
@@ -132,7 +101,7 @@ export async function encryptMove(move: RPSMove): Promise<EncryptedMove> {
 }
 
 /**
- * Mock encryption for development (NOT FOR PRODUCTION)
+ * Mock encryption for development
  */
 export async function encryptMoveMock(move: RPSMove): Promise<EncryptedMove> {
   console.warn("⚠️ Using mock encryption - NOT FOR PRODUCTION");
@@ -148,7 +117,6 @@ export async function encryptMoveMock(move: RPSMove): Promise<EncryptedMove> {
 
 /**
  * Submits an encrypted move to the smart contract
- * New signature: commitMove(uint256 _matchId, externalEuint8 _encryptedMove, bytes calldata _inputProof)
  */
 export async function submitEncryptedMove(
   contractAddress: string,
@@ -159,14 +127,12 @@ export async function submitEncryptedMove(
   try {
     const signer = await provider.getSigner();
 
-    // Updated ABI for new contract with externalEuint8 support
     const contractABI = [
       "function commitMove(uint256 _matchId, bytes calldata _encryptedMove, bytes calldata _inputProof) external",
     ];
 
     const contract = new Contract(contractAddress, contractABI, signer);
 
-    // Submit encrypted move with input proof for ZK verification
     const tx = await contract.commitMove(
       matchId,
       encryptedMove.encryptedValue,
@@ -190,9 +156,7 @@ export async function submitEncryptedMove(
 }
 
 /**
- * Resolve match using on-chain FHE comparison
- * New signature: resolveMatch(uint256 _matchId)
- * This performs encrypted computation without decryption
+ * Resolve match using on-chain comparison
  */
 export async function resolveMatchOnChain(
   contractAddress: string,
@@ -215,7 +179,7 @@ export async function resolveMatchOnChain(
     const receipt = await tx.wait();
     if (!receipt) throw new Error("Transaction failed");
 
-    console.log("✅ Match resolved with FHE comparison:", receipt.transactionHash);
+    console.log("✅ Match resolved:", receipt.transactionHash);
     return receipt.transactionHash;
   } catch (error) {
     console.error("❌ Match resolution failed:", error);
@@ -226,7 +190,7 @@ export async function resolveMatchOnChain(
 }
 
 /**
- * Approves USDC spending for tournament entry
+ * Approves USDC spending
  */
 export async function approveUSDC(
   usdcAddress: string,
@@ -259,7 +223,7 @@ export async function approveUSDC(
 }
 
 /**
- * Joins a tournament by paying entry fee
+ * Joins a tournament
  */
 export async function joinTournament(
   contractAddress: string,
@@ -351,7 +315,7 @@ export function getMoveName(move: RPSMove): string {
 }
 
 /**
- * Determines winner of RPS match (for UI display only)
+ * Determines winner of RPS match
  */
 export function determineWinner(
   move1: RPSMove,
