@@ -6,6 +6,13 @@ import Link from 'next/link';
 import { encryptMove, RPSMove, getMoveDisplay, getMoveName } from '@/src/services/fhevm';
 import styles from './dashboard.module.css';
 
+// Extend Window interface to include ethereum
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 interface Match {
   matchId: number;
   opponent: string;
@@ -37,7 +44,7 @@ export default function Dashboard() {
 
   const checkWalletConnection = async () => {
     try {
-      const browserProvider = new BrowserProvider(window.ethereum);
+      const browserProvider = new BrowserProvider(window.ethereum!);
       const accounts = await browserProvider.listAccounts();
       
       if (accounts && accounts.length > 0) {
