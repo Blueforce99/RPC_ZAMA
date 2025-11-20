@@ -1,0 +1,42 @@
+{
+  "name": "encrypted-rps-tournament",
+  "version": "1.0.0",
+  "description": "Encrypted Rock-Paper-Scissors Tournament using FHEVM and Zama FHE",
+  "main": "index.js",
+  "scripts": {
+    "install-deps": "npm install",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.ts --network fhevmTestnet",
+    "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
+    "node": "hardhat node",
+    "clean": "hardhat clean"
+  },
+  "keywords": [
+    "ethereum",
+    "fhevm",
+    "fhe",
+    "zama",
+    "encrypted-computation",
+    "rock-paper-scissors",
+    "gaming"
+  ],
+  "author": "Jojo",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.0.0",
+    "hardhat": "^2.22.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.0.0"
+  },
+  "dependencies": {
+    "@fhevm/hardhat-plugin": "^1.1.0",
+    "@fhevm/solidity": "^0.7.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "ethers": "^6.11.0",
+    "dotenv": "^16.4.0"
+  }
+}

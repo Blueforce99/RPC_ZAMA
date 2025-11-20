@@ -1,0 +1,345 @@
+.dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.header {
+  max-width: 1000px;
+  margin: 0 auto 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.5em;
+}
+
+.backLink {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  border-radius: 6px;
+  color: white;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+
+.backLink:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.error {
+  max-width: 1000px;
+  margin: 0 auto 20px;
+  background: #fee;
+  border: 2px solid #f00;
+  color: #d32f2f;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.loading {
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: center;
+  color: white;
+  font-size: 1.2em;
+  padding: 40px;
+}
+
+.matchesList {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  gap: 20px;
+}
+
+.matchCard {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease-out;
+}
+
+.matchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+}
+
+.matchHeader h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.3em;
+}
+
+.status {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status.waiting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status.committed {
+  background: #bfdbfe;
+  color: #1e40af;
+}
+
+.status.resolved {
+  background: #bbf7d0;
+  color: #065f46;
+}
+
+.status.paid {
+  background: #dbeafe;
+  color: #0c4a6e;
+}
+
+.matchInfo {
+  margin-bottom: 20px;
+}
+
+.opponent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.opponent span {
+  color: #666;
+  font-weight: 500;
+}
+
+.opponent strong {
+  font-family: monospace;
+  color: #667eea;
+}
+
+.moveSelection {
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.moveSelection p {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.moves {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.moveBtn {
+  flex: 1;
+  min-width: 100px;
+  padding: 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.moveBtn:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+}
+
+.moveBtn.selected {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+.moveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.emoji {
+  font-size: 2em;
+}
+
+.name {
+  font-size: 0.9em;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.submitBtn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.committed {
+  padding: 20px;
+  background: #e8f5e9;
+  border-left: 4px solid #10b981;
+  border-radius: 6px;
+}
+
+.committed p {
+  margin: 0;
+  color: #065f46;
+  font-weight: 500;
+}
+
+.waiting {
+  font-size: 0.9em;
+  color: #047857;
+  margin-top: 8px;
+}
+
+.result {
+  padding: 20px;
+  border-radius: 6px;
+  text-align: center;
+  border-left: 4px solid;
+}
+
+.result h4 {
+  margin: 0 0 10px 0;
+  font-size: 1.3em;
+}
+
+.result p {
+  margin: 0;
+  font-size: 0.95em;
+}
+
+.result.win {
+  background: #f0fdf4;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.result.loss {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #7f1d1d;
+}
+
+.empty {
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: center;
+  color: white;
+  padding: 60px 20px;
+}
+
+.empty p {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.joinBtn {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 12px 30px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s;
+  border: 2px solid white;
+}
+
+.joinBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.noAccess {
+  max-width: 600px;
+  margin: 100px auto;
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.noAccess h2 {
+  color: #667eea;
+  margin-top: 0;
+}
+
+.noAccess p {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-size: 1.8em;
+  }
+
+  .moves {
+    flex-direction: column;
+  }
+
+  .moveBtn {
+    min-width: auto;
+  }
+}
